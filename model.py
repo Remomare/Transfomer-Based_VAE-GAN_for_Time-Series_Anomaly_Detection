@@ -5,11 +5,10 @@ import torch.nn.functional as F
 
 class Transformer(nn.Module):
     def __init__(self, args, batch_size, vocab_size=8004, embed_size=512, hidden_size=256, nhead=8, latent_size=32, 
-                embedding_dropout_ratio=0.5, num_layers=6, topk=1, vae_setting=False,
+                embedding_dropout_ratio=0.5, num_layers=6, topk=1,
                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         super(Transformer, self).__init__()
-        self.args = args
         self.batch_size = batch_size
         self.vocab_size = vocab_size
         self.embed_size = embed_size
@@ -19,15 +18,16 @@ class Transformer(nn.Module):
         self.embedding_dropout_ratio = embedding_dropout_ratio
         self.num_layers = num_layers
         self.topk = topk
-        self.vae_setting = vae_setting
+
         
+        self.args = args
         self.device = device
 
         self.data_embed = nn.Embedding(vocab_size, embed_size)
         self.embedding_dropout = nn.Dropout(p=self.embedding_dropout_ratio)
 
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
-        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, device, num_layers)
+        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
 
     def forward(self, input_data, target_data, non_pad_length, time):
 
@@ -36,9 +36,9 @@ class Transformer(nn.Module):
 
         if self.args.vae_setting == True:
             src_mask = self.encoder.generate_square_subsequent_mask(input_data.size(1))
-            src_pad_mask = self.encoder.generate_padding_mask(input_data, self.spm_model.pad_id())
+            src_pad_mask = self.encoder.generate_padding_mask(input_data, 0)
             tgt_mask = self.decoder.generate_square_subsequent_mask(target_data.size(1))
-            tgt_pad_mask = self.decoder.generate_padding_mask(target_data, self.spm_model.pad_id())
+            tgt_pad_mask = self.decoder.generate_padding_mask(target_data, 0)
 
             if self.embedding_dropout.p > 0:
                 target_embedding = self.embedding_dropout(target_embedding)
@@ -53,12 +53,12 @@ class Transformer(nn.Module):
             tgt_mask = self.decoder.generate_square_subsequent_mask(target_data.size(1)) 
             tgt_pad_mask = self.decoder.generate_padding_mask(target_data, 0)
             
-            z = self.encoder(input_embedding, non_pad_length)
+            z = self.encoder(input_embedding, src_mask, src_pad_mask)
             
             if self.embedding_dropout.p != 0:
                 target_embedding = self.embedding_dropout(target_embedding)
             
-            output = self.decoder(z, target_embedding, non_pad_length)
+            output = self.decoder(z, target_embedding, tgt_mask=tgt_mask, mem_mask=src_mask, tgt_pad_mask=tgt_pad_mask, mem_pad_mask=src_pad_mask)
             return output
 
 
@@ -76,7 +76,7 @@ class encoderTransformer(nn.Module):
         self.nhead = nhead
         self.latent_size= latent_size
         self.num_layers = num_layers
-
+        self.args =args
         self.device = device
 
         self.src_mask = None
@@ -92,7 +92,7 @@ class encoderTransformer(nn.Module):
 
     def forward(self, input_embedding, src_mask, src_pad_mask, condition_embedding=None, has_mask = True):
         
-        if self.vae_setting == True: #transformer-based-vae
+        if self.args.vae_setting == True: #transformer-based-vae
             mean, log_var = self.vae_encode(input_embedding, src_mask, src_pad_mask, condition_embedding)
             z = self.reparameterize(mean, log_var)
             return z, log_var, mean
@@ -116,7 +116,7 @@ class encoderTransformer(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device) 
         return mask
             
     def encoder(self, input_embedding, src_mask, src_pad_mask):
@@ -160,7 +160,7 @@ class encoderTransformer(nn.Module):
 
 
 class decoderTransformer(nn.Module):
-    def __init__(self, args, batch_size, input_size, nhead, latent_size, device, num_layers, topk=1):
+    def __init__(self, args, batch_size, input_size, nhead,  latent_size, num_layers, device, topk=1):
         super(decoderTransformer, self).__init__()
         self.args = args
         self.batch_size = batch_size
@@ -187,7 +187,7 @@ class decoderTransformer(nn.Module):
 
         target_embedding = self.pos_encoder(target_embedding)
         
-        if self.arsg.vae_setting == True:
+        if self.args.vae_setting == True:
 
             hidden = self.activation_function(z) 
 
@@ -242,7 +242,7 @@ class decoderTransformer(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device) 
         return mask
 
 

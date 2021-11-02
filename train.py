@@ -84,9 +84,9 @@ if __name__ == "__main__":
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=4,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=32000, type=int,
+    parser.add_argument('--vocab_size', default=3200000, type=int,
                         help='Caption vocabulary size; Default is 8000')
-    parser.add_argument('--max_seq_len', default=100, type=int,
+    parser.add_argument('--max_seq_len', default=20, type=int,
                         help='maximum sequence length for each sequence')
     parser.add_argument('--min_seq_len', default=10, type=int,
                         help='minumum sequence length for each sequence')
@@ -107,9 +107,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--vae_setting', default=False, type= bool)
 
-    parser.add_argument('--epoch', default=30, type=int,
+    parser.add_argument('--epoch', default=10, type=int,
                         help='Epoch size for training')
-    parser.add_argument('--batch_size', default=32, type=int,
+    parser.add_argument('--batch_size', default=16, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_workers', default=2, type=int,
                         help='Number of workers used in dataloading')

@@ -54,12 +54,13 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
     else:
          for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
             src_input = batch['src_input'].to(device)
-            tgt_input = batch['src_input'].to(device)
+            tgt_input = batch['tgt_input'].to(device)
+            tgt_output = batch['tgt_output'].to(device)
             time = batch['time'].to(device)
             length = batch['length'].to(device)
 
-            z = model(src_input, tgt_input, length, time)
-            loss = loss_fn(z)
+            z = model(src_input, src_input, length, time)
+            loss = loss_fn(z, tgt_output)
 
 
             optimizer.zero_grad()

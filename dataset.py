@@ -90,8 +90,9 @@ class  CustomDataset(torch.utils.data.Dataset):
 
                 else:
                     src_input = tensor_ingredient
-                    tgt_input = tensor_target
-                    for d, d_name in [(src_input, 'src_input'),(tgt_input, 'tgt_input')]:
+                    tgt_input = torch.cat([torch.tensor(1, dtype=torch.long).unsqueeze(0), tensor_ingredient]).long()
+                    tgt_output = torch.cat([tensor_ingredient, torch.tensor(2, dtype=torch.long).unsqueeze(0)]).long()
+                    for d, d_name in [(src_input, 'src_input'),(tgt_input, 'tgt_input'), (tgt_output, 'tgt_output')]:
 
                         pad_len = args.max_seq_len - len(d)
                         if pad_len > 0:
