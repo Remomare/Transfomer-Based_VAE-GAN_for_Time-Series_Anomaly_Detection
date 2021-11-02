@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class Transformer(nn.Module):
     def __init__(self, args, batch_size, vocab_size=8004, embed_size=512, hidden_size=256, nhead=8, latent_size=32, 
-                embedding_dropout_ratio=0.5, num_layers=6, topk=1,
+                embedding_dropout_ratio=0.5, num_layers=6, topk=1, 
                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         super(Transformer, self).__init__()
@@ -19,7 +19,6 @@ class Transformer(nn.Module):
         self.num_layers = num_layers
         self.topk = topk
 
-        
         self.args = args
         self.device = device
 
@@ -59,7 +58,7 @@ class Transformer(nn.Module):
                 target_embedding = self.embedding_dropout(target_embedding)
             
             output = self.decoder(z, target_embedding, tgt_mask=tgt_mask, mem_mask=src_mask, tgt_pad_mask=tgt_pad_mask, mem_pad_mask=src_pad_mask)
-            return output
+            return z, output , target_embedding
 
 
 
@@ -116,7 +115,7 @@ class encoderTransformer(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device) 
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device)
         return mask
             
     def encoder(self, input_embedding, src_mask, src_pad_mask):
@@ -242,7 +241,7 @@ class decoderTransformer(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device) 
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device)
         return mask
 
 

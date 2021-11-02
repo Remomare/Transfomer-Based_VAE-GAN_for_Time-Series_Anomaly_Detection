@@ -58,10 +58,16 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             tgt_output = batch['tgt_output'].to(device)
             time = batch['time'].to(device)
             length = batch['length'].to(device)
+            """
+            need check
+            """
+            z, output, tgt_embedding = model(src_input, tgt_input, length, time)
 
-            z = model(src_input, src_input, length, time)
-            loss = loss_fn(z, tgt_output)
+            print(output)
+            print(tgt_output)
+            print(tgt_embedding)
 
+            loss = loss_fn(output, tgt_embedding)
 
             optimizer.zero_grad()
             loss.backward()

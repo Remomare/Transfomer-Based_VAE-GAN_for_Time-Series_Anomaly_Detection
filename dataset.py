@@ -26,12 +26,8 @@ class  CustomDataset(torch.utils.data.Dataset):
         else:
             raise ValueError('data_column_index must be specified if data_path is a csv file')
         
-
         datas = df[ingredient_column]
         targets = df[target_clounm]
-
-        print(datas.head())
-        print(targets.head())
         
         if args.max_seq_len is None:
             args.max_seq_len = max(len(t.split()) for t in datas)
@@ -94,7 +90,7 @@ class  CustomDataset(torch.utils.data.Dataset):
                     tgt_output = torch.cat([tensor_ingredient, torch.tensor(2, dtype=torch.long).unsqueeze(0)]).long()
                     for d, d_name in [(src_input, 'src_input'),(tgt_input, 'tgt_input'), (tgt_output, 'tgt_output')]:
 
-                        pad_len = args.max_seq_len - len(d)
+                        pad_len = (args.max_seq_len+1) - len(d)
                         if pad_len > 0:
                             padding  = torch.tensor(0, dtype=torch.long).unsqueeze(0).repeat(pad_len)
                             data[d_name] = torch.cat([d, padding]).long()
