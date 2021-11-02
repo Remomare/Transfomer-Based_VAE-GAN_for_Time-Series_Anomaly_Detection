@@ -63,10 +63,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             """
             z, output, tgt_embedding = model(src_input, tgt_input, length, time)
 
-            print(output)
-            print(tgt_output)
-            print(tgt_embedding)
-
             loss = loss_fn(output, tgt_embedding)
 
             optimizer.zero_grad()
