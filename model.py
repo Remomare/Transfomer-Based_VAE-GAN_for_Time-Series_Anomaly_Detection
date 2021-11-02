@@ -9,6 +9,7 @@ class Transformer(nn.Module):
                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         super(Transformer, self).__init__()
+        self.args = args
         self.batch_size = batch_size
         self.vocab_size = vocab_size
         self.embed_size = embed_size
@@ -33,7 +34,7 @@ class Transformer(nn.Module):
         input_embedding = self.data_embed(input_data)
         target_embedding = self.data_embed(target_data)
 
-        if self.vae_setting == True:
+        if self.args.vae_setting == True:
             src_mask = self.encoder.generate_square_subsequent_mask(input_data.size(1))
             src_pad_mask = self.encoder.generate_padding_mask(input_data, self.spm_model.pad_id())
             tgt_mask = self.decoder.generate_square_subsequent_mask(target_data.size(1))
@@ -103,7 +104,7 @@ class encoderTransformer(nn.Module):
             else:
                 self.src_mask = None
 
-            z = self.encoder(input_embedding)
+            z = self.encoder(input_embedding, src_mask, src_pad_mask)
 
             return z
 
@@ -118,12 +119,12 @@ class encoderTransformer(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
             
-    def encoder(self, input_embedding, src_mask):
+    def encoder(self, input_embedding, src_mask, src_pad_mask):
 
         input_embedding = input_embedding * math.sqrt(self.input_size)
         input_embedding = self.pos_encoder(input_embedding)
 
-        encoder_output = self.transformer_encoder(input_embedding, src_mask)
+        encoder_output = self.transformer_encoder(input_embedding, src_mask, src_key_padding_mask=src_pad_mask)
 
         return encoder_output
 
@@ -161,6 +162,7 @@ class encoderTransformer(nn.Module):
 class decoderTransformer(nn.Module):
     def __init__(self, args, batch_size, input_size, nhead, latent_size, device, num_layers, topk=1):
         super(decoderTransformer, self).__init__()
+        self.args = args
         self.batch_size = batch_size
         self.input_size = input_size # same as embed_size
         self.nhead = nhead
@@ -185,7 +187,7 @@ class decoderTransformer(nn.Module):
 
         target_embedding = self.pos_encoder(target_embedding)
         
-        if self.vae_setting == True:
+        if self.arsg.vae_setting == True:
 
             hidden = self.activation_function(z) 
 
