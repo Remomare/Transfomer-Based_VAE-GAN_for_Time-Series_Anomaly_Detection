@@ -19,7 +19,7 @@ class  CustomDataset(torch.utils.data.Dataset):
             time_column = df.columns[args.time_column_index]
         
         if args.target_column_index is not None:
-            target_clounm = df.columns[args.target_column_index]
+            target_colunm = df.columns[args.target_column_index]
 
         if args.data_column_index is not None:
             ingredient_column = df.columns[args.data_column_index]
@@ -27,7 +27,7 @@ class  CustomDataset(torch.utils.data.Dataset):
             raise ValueError('data_column_index must be specified if data_path is a csv file')
         
         datas = df[ingredient_column]
-        targets = df[target_clounm]
+        targets = df[target_colunm]
         
         if args.max_seq_len is None:
             args.max_seq_len = max(len(t.split()) for t in datas)
@@ -62,7 +62,7 @@ class  CustomDataset(torch.utils.data.Dataset):
             tensor_ingredient = torch.cat((tensor_ingredient,scala_ingredient))
             tensor_target = torch.cat((tensor_target, scala_target))
 
-            if len(tensor_ingredient) == (args.max_seq_len):
+            if len(tensor_ingredient) == (args.seq_len):
 
                 if args.vae_setting==True:
                     src_input = tensor_ingredient

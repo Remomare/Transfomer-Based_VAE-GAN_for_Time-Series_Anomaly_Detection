@@ -86,8 +86,10 @@ if __name__ == "__main__":
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
     parser.add_argument('--vocab_size', default=3200000, type=int,
                         help='Caption vocabulary size; Default is 8000')
-    parser.add_argument('--max_seq_len', default=30, type=int,
+    parser.add_argument('--max_seq_len', default=50, type=int,
                         help='maximum sequence length for each sequence')
+    parser.add_argument('--seq_len', default=30, type=int,
+                        help='maximum sequence length for each sequence')                        
     parser.add_argument('--min_seq_len', default=10, type=int,
                         help='minumum sequence length for each sequence')
     parser.add_argument('--topk', default=1, type=int,

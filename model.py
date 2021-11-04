@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class Transformer(nn.Module):
     def __init__(self, args, batch_size, vocab_size=8004, embed_size=512, hidden_size=256, nhead=8, latent_size=32, 
-                embedding_dropout_ratio=0.5, num_layers=6, topk=1, 
+                embedding_dropout_ratio=0.5, num_layers=6, topk=1, vae_setting=False,
                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         super(Transformer, self).__init__()
@@ -18,22 +18,22 @@ class Transformer(nn.Module):
         self.embedding_dropout_ratio = embedding_dropout_ratio
         self.num_layers = num_layers
         self.topk = topk
-
-        self.args = args
+        self.vae_setting = vae_setting
+        
         self.device = device
 
         self.data_embed = nn.Embedding(vocab_size, embed_size)
         self.embedding_dropout = nn.Dropout(p=self.embedding_dropout_ratio)
 
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
-        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, num_layers, device)
+        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size,  num_layers, device)
 
     def forward(self, input_data, target_data, non_pad_length, time):
 
         input_embedding = self.data_embed(input_data)
         target_embedding = self.data_embed(target_data)
 
-        if self.args.vae_setting == True:
+        if self.vae_setting == True:
             src_mask = self.encoder.generate_square_subsequent_mask(input_data.size(1))
             src_pad_mask = self.encoder.generate_padding_mask(input_data, 0)
             tgt_mask = self.decoder.generate_square_subsequent_mask(target_data.size(1))
@@ -159,7 +159,7 @@ class encoderTransformer(nn.Module):
 
 
 class decoderTransformer(nn.Module):
-    def __init__(self, args, batch_size, input_size, nhead,  latent_size, vocab_size, num_layers, device, topk=1):
+    def __init__(self, args, batch_size, input_size, nhead, latent_size, vocab_size, num_layers, device, topk=1):
         super(decoderTransformer, self).__init__()
         self.args = args
         self.batch_size = batch_size
@@ -174,7 +174,6 @@ class decoderTransformer(nn.Module):
         self.decoder_layer = nn.TransformerDecoderLayer(d_model=input_size, nhead=nhead, dim_feedforward=input_size*4, batch_first=True, device=device)
         self.transformer_decoder = nn.TransformerDecoder(self.decoder_layer, num_layers=num_layers)
         self.pos_encoder = positionalEncoding(input_size)
-
 
         self.linear_hidden1 = nn.Linear(latent_size, input_size // 8)
         self.linear_hidden2 = nn.Linear(input_size // 8, input_size)
