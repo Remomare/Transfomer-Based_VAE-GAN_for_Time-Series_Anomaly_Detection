@@ -29,7 +29,7 @@ def data_preprocessing(args):
             for i in tqdm(range(0, df.shape[0]), desc='{} data preprocessing...'.format(origin_data)):
                 df.loc[i,data_column] = round((df[data_column].values[i] - datas_min) * 1000) # for eos sos token
                
-    df.to_csv(os.path.join(args.dataset_path, 'preprossed_data.txt'), sep='\t',columns=["Timestamp","Str1","Str2","Str3"], header=True, index=False)
+    df.to_csv(os.path.join(args.dataset_path, 'preprocessed_data.txt'), sep='\t',columns=["Timestamp","Str1","Str2","Str3"], header=True, index=False)
 
 
 if __name__ == "__main__":
