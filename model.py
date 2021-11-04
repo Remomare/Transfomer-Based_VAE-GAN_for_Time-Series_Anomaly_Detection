@@ -26,7 +26,7 @@ class Transformer(nn.Module):
         self.embedding_dropout = nn.Dropout(p=self.embedding_dropout_ratio)
 
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
-        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
+        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, num_layers, device)
 
     def forward(self, input_data, target_data, non_pad_length, time):
 
@@ -159,7 +159,7 @@ class encoderTransformer(nn.Module):
 
 
 class decoderTransformer(nn.Module):
-    def __init__(self, args, batch_size, input_size, nhead,  latent_size, num_layers, device, topk=1):
+    def __init__(self, args, batch_size, input_size, nhead,  latent_size, vocab_size, num_layers, device, topk=1):
         super(decoderTransformer, self).__init__()
         self.args = args
         self.batch_size = batch_size
@@ -169,16 +169,20 @@ class decoderTransformer(nn.Module):
         self.num_layers = num_layers
         self.topk = topk
         self.device = device
+        self.vocab_size = vocab_size
 
         self.decoder_layer = nn.TransformerDecoderLayer(d_model=input_size, nhead=nhead, dim_feedforward=input_size*4, batch_first=True, device=device)
         self.transformer_decoder = nn.TransformerDecoder(self.decoder_layer, num_layers=num_layers)
         self.pos_encoder = positionalEncoding(input_size)
 
 
-        self.linear_layer1 = nn.Linear(latent_size, input_size // 8)
-        self.linear_layer2 = nn.Linear(input_size // 8, input_size)
+        self.linear_hidden1 = nn.Linear(latent_size, input_size // 8)
+        self.linear_hidden2 = nn.Linear(input_size // 8, input_size)
+        self.linear_vocab1 = nn.Linear(input_size, vocab_size // 8)
+        self.linear_vocab2 = nn.Linear(vocab_size // 8, vocab_size)
 
-        self.activation_function = nn.Sequential(self.linear_layer1, nn.GELU(), self.linear_layer2)
+        self.linear_hidden = nn.Sequential(self.linear_hidden1, nn.GELU(), self.linear_hidden2)
+        self.linear_vocab = nn.Sequential(self.linear_vocab1, nn.GELU(), self.linear_vocab2)
 
     def forward(self, z, target_embedding, tgt_mask, mem_mask, tgt_pad_mask, mem_pad_mask):
         
@@ -188,10 +192,10 @@ class decoderTransformer(nn.Module):
         
         if self.args.vae_setting == True:
 
-            hidden = self.activation_function(z) 
+            hidden = self.linear_hidden(z) 
 
             output = self.transformer_decoder(tgt=target_embedding, memory=hidden, tgt_mask=tgt_mask, memory_mask=mem_mask, tgt_key_padding_mask=tgt_pad_mask, memory_key_padding_mask=mem_pad_mask) 
-            logits = self.activation_function(output) 
+            logits = self.linear_vocab(output) 
             log_prob = F.log_softmax(logits, dim=-1) 
 
             return log_prob
