@@ -1,0 +1,10 @@
+
+__pycache__/dataset.cpython-38.pyc
+__pycache__/epoch.cpython-38.pyc
+__pycache__/model.cpython-38.pyc
+__pycache__/utils.cpython-38.pyc
+G3/preprocessed_data.txt
+runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636475425.LAPTOP-BFO77RI1.1336.0
+runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636475617.LAPTOP-BFO77RI1.14768.0
+runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636476081.LAPTOP-BFO77RI1.13476.0
+runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636476344.LAPTOP-BFO77RI1.9664.0
