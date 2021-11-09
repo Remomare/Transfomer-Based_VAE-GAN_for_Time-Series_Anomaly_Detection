@@ -22,10 +22,10 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-            time = batch['time'].to(device)
+            timestamp = batch['time'].to(device)
             length = batch['length'].to(device)
 
-            log_prob, mean, log_var, z = model(src_input, tgt_input, length, time)
+            log_prob, mean, log_var, z = model(src_input, tgt_input, length, timestamp)
             NLL_loss, KL_loss, KL_weight = loss_fn(log_prob, tgt_output, length, mean, log_var, kl_anneal_step)
             loss = (NLL_loss + KL_weight * KL_loss) / args.batch_size
 
@@ -94,28 +94,28 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
 def test_model(args, model, dataloader, spm_model, writer, device):
 
     model = model.eval()
-    total_bleu_score = 0
-    reference_text = []
-    generated_text = []
+    total_source_distance = 0
+    reference_series = []
+    generated_series = []
 
     for batch_idx, batch in enumerate(tqdm(dataloader, desc='TEST Sequence')):
         src_input = batch['src_input'].to(device)
         tgt_input = batch['tgt_input'].to(device)
         tgt_output = batch['tgt_output'].to(device)
-        label = batch['label'].to(device)
+        timestamp = batch['time'].to(device)
         length = batch['length'].to(device)
         reference = batch['text']
-        batch_bleu_score = 0
+        source_distance = 0
 
         if args.vae_setting == True:
             with torch.no_grad():
                 src_embedding = model.get_embedding(src_input)
 
                 src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
-                src_pad_mask = model.encoder.generate_padding_mask(src_input, spm_model.pad_id())
+                src_pad_mask = model.encoder.generate_padding_mask(src_input, 0)
 
-                z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask)
-                output = model.decoder.decode(z, src_pad_mask)
+                z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask, timestamp)
+                output = model.decoder.vae_decode(z, src_pad_mask, timestamp)
 
         if args.vae_setting ==False:
             with torch.no_grad():
@@ -123,32 +123,32 @@ def test_model(args, model, dataloader, spm_model, writer, device):
 
                 src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
         for i in range(0, src_input.size(0)):
-            reference_text.append(reference[i])
-            generated_text.append(output[i])
-            source_distance = generated_text - reference_text
+            reference_series.append(reference[i])
+            generated_series.append(output[i])
+            source_distance = generated_series - reference_series
 
         # Logging
         if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
-            tqdm.write(f'TEST: {batch_idx}/{len(dataloader)} - BLEU={source_distance}')
+            tqdm.write(f'TEST: {batch_idx}/{len(dataloader)} - Absolute_Value={source_distance}')
         if args.use_tensorboard_logging:
-            writer.add_scalar('TEST/distance', source_distance, batch_idx)
+            writer.add_scalar('TEST/Absolute_Value', source_distance, batch_idx)
 
-    total_bleu_score /= len(dataloader)
+    total_source_distance /= len(dataloader)
 
     tqdm.write("Completed model test")
     if args.use_tensorboard_logging:
-        writer.add_text('TEST/Total_BLEU_Score', str(total_bleu_score))
+        writer.add_text('TEST/Total_BLEU_Score', str(total_source_distance))
     
     # Save generated text as csv file
     if args.data_path.endswith('.csv'):
         df_reference_logit = pd.read_csv(os.path.join(args.data_path), header=None)
-        df_generated = pd.DataFrame(generated_text)
-        df_reference_text = pd.DataFrame(reference_text)
+        df_generated = pd.DataFrame(generated_series)
+        df_reference_text = pd.DataFrame(reference_series)
 
         df = pd.concat([df_reference_logit[0], df_reference_text, df_generated], axis=1)
         df.to_csv(args.output_path, header=None, index=None)
     elif args.data_path.endswith('.txt'):
         with open(args.data_path, 'w') as f:
-            for sentence in generated_text:
+            for sentence in generated_series:
                 f.write(sentence + '\n')
     tqdm.write(f"Saved generated text to {args.output_path}")
