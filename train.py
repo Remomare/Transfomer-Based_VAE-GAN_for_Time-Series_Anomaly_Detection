@@ -21,7 +21,7 @@ def main(args):
     datasets = {}
     dataloaders = {}
 
-    csv_path = os.path.join(args.dataset_path)
+    csv_path = os.path.join(args.dataset_path + args.dataset)
     datasets = CustomDataset(args, csv_path)
     dataloaders = torch.utils.data.DataLoader(datasets, batch_size=args.batch_size, 
                                                         drop_last=True, shuffle=True, num_workers=args.num_workers)
@@ -73,16 +73,16 @@ if __name__ == "__main__":
                         help='Path to save debug files')
 
     parser.add_argument('--dataset_path', type=str,
-                        default='./G3/01000002.txt',
+                        default='./G3/',
                         help='Path of dataset foler')
     parser.add_argument('--dataset', type=str,
-                        default='01000002.txt',
+                        default='preprocessed_data.txt',
                         help='Specific dataset to use')
     parser.add_argument('--time_column_index', type=int, default=0,
                         help='Column index of label in csv file')
-    parser.add_argument('--target_column_index', type=int, default=6,
+    parser.add_argument('--target_column_index', type=int, default=3,
                         help='Column index of label in csv file')
-    parser.add_argument('--data_column_index', type=int, default=4,
+    parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
     parser.add_argument('--vocab_size', default=3200000, type=int,
                         help='Caption vocabulary size; Default is 8000')
