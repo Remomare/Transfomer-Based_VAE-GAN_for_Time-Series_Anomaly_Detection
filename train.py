@@ -84,7 +84,7 @@ if __name__ == "__main__":
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=32000, type=int,
+    parser.add_argument('--vocab_size', default=64000, type=int,
                         help='Caption vocabulary size; Default is 8000')
     parser.add_argument('--max_seq_len', default=50, type=int,
                         help='maximum sequence length for each sequence')
@@ -107,7 +107,7 @@ if __name__ == "__main__":
                         help='Number of layers for model, especially transformer layer')
 
 
-    parser.add_argument('--vae_setting', default=False, type= bool)
+    parser.add_argument('--vae_setting', default=True, type= bool)
 
     parser.add_argument('--epoch', default=10, type=int,
                         help='Epoch size for training')
