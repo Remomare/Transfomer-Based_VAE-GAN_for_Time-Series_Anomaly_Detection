@@ -131,7 +131,7 @@ def test_model(args, model, dataloader, spm_model, writer, device):
         if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
             tqdm.write(f'TEST: {batch_idx}/{len(dataloader)} - BLEU={source_distance}')
         if args.use_tensorboard_logging:
-            writer.add_scalar('TEST/BLEU_Score', source_distance, batch_idx)
+            writer.add_scalar('TEST/distance', source_distance, batch_idx)
 
     total_bleu_score /= len(dataloader)
 
