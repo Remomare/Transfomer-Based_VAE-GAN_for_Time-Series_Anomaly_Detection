@@ -43,8 +43,8 @@ class  CustomDataset(torch.utils.data.Dataset):
 
             #data['ingredient'] = torch.tensor(df[ingredient_column][idx], dtype=torch.long)
 
-            ingredient = [datas[idx]*1000]
-            target = [targets[idx]*1000]
+            ingredient = [datas[idx]]
+            target = [targets[idx]]
             data['ingredient'] = ingredient
             data['target'] = target
 
