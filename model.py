@@ -28,7 +28,7 @@ class Transformer(nn.Module):
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
         self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size,  num_layers, device)
 
-    def forward(self, input_data, target_data, non_pad_length, time):
+    def forward(self, input_data, target_data, non_pad_length, timestamp):
 
         input_embedding = self.data_embed(input_data)
         target_embedding = self.data_embed(target_data)
@@ -42,8 +42,8 @@ class Transformer(nn.Module):
             if self.embedding_dropout.p > 0:
                 target_embedding = self.embedding_dropout(target_embedding)
     
-            z, mean, log_var = self.encoder(input_embedding, src_mask=src_mask, src_pad_mask=src_pad_mask)
-            log_prob = self.decoder(z, target_embedding, tgt_mask=tgt_mask, mem_mask=src_mask, tgt_pad_mask=tgt_pad_mask, mem_pad_mask=src_pad_mask)
+            z, mean, log_var = self.encoder(input_embedding, src_mask=src_mask, src_pad_mask=src_pad_mask, timestamp=timestamp)
+            log_prob = self.decoder(z, target_embedding, tgt_mask=tgt_mask, mem_mask=src_mask, tgt_pad_mask=tgt_pad_mask, mem_pad_mask=src_pad_mask, timestamp=timestamp)
             return log_prob, mean, log_var, z
 
         else:
@@ -89,10 +89,10 @@ class encoderTransformer(nn.Module):
 
         self.activation_function = nn.Sequential(self.linear_layer1, nn.GELU(), self.linear_layer2)
 
-    def forward(self, input_embedding, src_mask, src_pad_mask, condition_embedding=None, has_mask = True):
+    def forward(self, input_embedding, src_mask, src_pad_mask, timestamp, condition_embedding=None, has_mask = True):
         
         if self.args.vae_setting == True: #transformer-based-vae
-            mean, log_var = self.vae_encode(input_embedding, src_mask, src_pad_mask, condition_embedding)
+            mean, log_var = self.vae_encode(input_embedding, src_mask, src_pad_mask, timestamp, condition_embedding)
             z = self.reparameterize(mean, log_var)
             return z, log_var, mean
         else: #transformer
@@ -118,20 +118,20 @@ class encoderTransformer(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device)
         return mask
             
-    def encoder(self, input_embedding, src_mask, src_pad_mask):
+    def encoder(self, input_embedding, src_mask, src_pad_mask, timestamp):
 
         input_embedding = input_embedding * math.sqrt(self.input_size)
-        input_embedding = self.pos_encoder(input_embedding)
+        input_embedding = self.pos_encoder(input_embedding, timestamp)
 
         encoder_output = self.transformer_encoder(input_embedding, src_mask, src_key_padding_mask=src_pad_mask)
 
         return encoder_output
 
-    def vae_encode(self, input_embedding, src_mask, src_pad_mask, condition_embedding):
+    def vae_encode(self, input_embedding, src_mask, src_pad_mask, timestamp, condition_embedding):
         
         batch_size = input_embedding.size(0)
 
-        input_embedding = self.pos_encoder(input_embedding) 
+        input_embedding = self.pos_encoder(input_embedding, timestamp) 
 
 
         if condition_embedding is not None:
@@ -183,11 +183,11 @@ class decoderTransformer(nn.Module):
         self.linear_hidden = nn.Sequential(self.linear_hidden1, nn.GELU(), self.linear_hidden2)
         self.linear_vocab = nn.Sequential(self.linear_vocab1, nn.GELU(), self.linear_vocab2)
 
-    def forward(self, z, target_embedding, tgt_mask, mem_mask, tgt_pad_mask, mem_pad_mask):
+    def forward(self, z, target_embedding, tgt_mask, mem_mask, tgt_pad_mask, mem_pad_mask, timestamp):
         
         batch_size = target_embedding.size(0)
 
-        target_embedding = self.pos_encoder(target_embedding)
+        target_embedding = self.pos_encoder(target_embedding, timestamp)
         
         if self.args.vae_setting == True:
 
@@ -204,7 +204,7 @@ class decoderTransformer(nn.Module):
             output = self.transformer_decoder(tgt=target_embedding, memory=z, tgt_mask=tgt_mask, memory_mask=mem_mask, tgt_key_padding_mask=tgt_pad_mask, memory_key_padding_mask=mem_pad_mask) 
             return output
 
-    def vae_decode(self, z, mem_pad_mask):
+    def vae_decode(self, z, mem_pad_mask, timestamp):
          
         batch_size = z.size(0)
         seq_len = z.size(1)
@@ -215,7 +215,7 @@ class decoderTransformer(nn.Module):
 
         for i in range(1, seq_len):
             tgt_embedding = self.embed_layer(output[:, :i]) 
-            tgt_embedding = self.pos_encoder(tgt_embedding) 
+            tgt_embedding = self.pos_encoder(tgt_embedding, timestamp) 
 
             tgt_mask = self.generate_square_subsequent_mask(length=i)
 
@@ -262,7 +262,7 @@ class positionalEncoding(nn.Module):
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
+    def forward(self, x, timestamp):
+        x = x + self.pe[:timestamp.size(0), :]
         return self.dropout(x)
 
