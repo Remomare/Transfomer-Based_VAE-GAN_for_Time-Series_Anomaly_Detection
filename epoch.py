@@ -4,7 +4,7 @@ from tqdm.auto import tqdm
 import torch
 import matplotlib.pyplot as plt
 
-from utils import batch_accuracy_test, plot_grad_flow, vae_batch_accuracy
+from utils import batch_accuracy_test, plot_grad_flow, vae_batch_accuracy, plot_result_gragh
 
 kl_anneal_step = 0
 best_acc = 0
@@ -104,7 +104,7 @@ def test_model(args, model, dataloader, spm_model, writer, device):
         tgt_output = batch['tgt_output'].to(device)
         timestamp = batch['time'].to(device)
         length = batch['length'].to(device)
-        reference = batch['text']
+        reference = batch['target']
         source_distance = 0
 
         if args.vae_setting == True:
@@ -120,8 +120,8 @@ def test_model(args, model, dataloader, spm_model, writer, device):
         if args.vae_setting ==False:
             with torch.no_grad():
                 src_embedding = model.get_embedding(src_input)
-
                 src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
+                
         for i in range(0, src_input.size(0)):
             reference_series.append(reference[i])
             generated_series.append(output[i])
@@ -139,6 +139,8 @@ def test_model(args, model, dataloader, spm_model, writer, device):
     if args.use_tensorboard_logging:
         writer.add_text('TEST/Total_BLEU_Score', str(total_source_distance))
     
+    plot_result_gragh(args, reference_series, generated_series)
+    
     # Save generated text as csv file
     if args.data_path.endswith('.csv'):
         df_reference_logit = pd.read_csv(os.path.join(args.data_path), header=None)
@@ -152,3 +154,5 @@ def test_model(args, model, dataloader, spm_model, writer, device):
             for sentence in generated_series:
                 f.write(sentence + '\n')
     tqdm.write(f"Saved generated text to {args.output_path}")
+    
+    

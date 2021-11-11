@@ -18,17 +18,15 @@ def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    csv_path = os.path.join(args.dataset_path)
+    csv_path = os.path.join(args.dataset_path + args.dataset)
     dataset_test = CustomDataset(args, csv_path)
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, 
                                                 drop_last=False, shuffle=False, num_workers=args.num_workers)
 
     model = Transformer(batch_size=args.batch_size, vocab_size=args.vocab_size+4,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
-                        condition_size=args.condition_size, condition_num=args.condition_num,
-                        embedding_dropout_ratio=args.embedding_dropout_ratio, layer_type=args.layer_type,
-                        transformer_num_layers=args.transformer_num_layers, gru_num_layers=args.gru_num_layers, 
-                        bidirectional=args.bidirectional, topk=args.topk, vae_setting=args.vae_setting,
+                        embedding_dropout_ratio=args.embedding_dropout_ratio, num_layers=args.num_layers,
+                        topk=args.topk, vae_setting=args.vae_setting,
                         device=device).to(device) 
     
     model.load_state_dict(torch.load(args.model_path))
@@ -59,16 +57,18 @@ if __name__ == "__main__":
                         default='./G3/',
                         help='Path of dataset foler')
     parser.add_argument('--dataset', type=str,
-                        default='01000002',
+                        default='preprocessed_data.txt',
                         help='Specific dataset to use')
     parser.add_argument('--time_column_index', type=int, default=0,
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=32000, type=int,
+    parser.add_argument('--target_column_index', default=3, type=int)
+    parser.add_argument('--vocab_size', default=48000, type=int,
                         help='Caption vocabulary size; Default is 8000')
     parser.add_argument('--max_seq_len', default=100, type=int,
                         help='maximum sequence length for each sequence')
+    parser.add_argument('--seq_len', default=30, type=int)
     parser.add_argument('--min_seq_len', default=10, type=int,
                         help='minumum sequence length for each sequence')
     parser.add_argument('--topk', default=1, type=int,
@@ -82,8 +82,7 @@ if __name__ == "__main__":
                         help='Size of latent vector for model')
     parser.add_argument('--embedding_dropout_ratio', default=0.5, type=float,
                         help='Dropout ratio for embedding layer')
-    parser.add_argument('--transformer_num_layers', default=6, type=int,
-                        help='Number of layers for model, especially transformer layer')
+    parser.add_argument('--num_layers', default=6, type=int)
 
 
     parser.add_argument('--vae_setting', default=False, type= bool)

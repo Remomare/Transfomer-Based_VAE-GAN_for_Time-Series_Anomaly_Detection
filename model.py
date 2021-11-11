@@ -26,7 +26,7 @@ class Transformer(nn.Module):
         self.embedding_dropout = nn.Dropout(p=self.embedding_dropout_ratio)
 
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
-        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size,  num_layers, device)
+        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, self.data_embed, num_layers, device)
 
     def forward(self, input_data, target_data, non_pad_length, timestamp):
 
@@ -63,7 +63,7 @@ class Transformer(nn.Module):
 
 
     def get_embedding(self, input_data):
-        return self.text_embed(input_data)
+        return self.data_embed(input_data)
 
 
 
@@ -159,7 +159,7 @@ class encoderTransformer(nn.Module):
 
 
 class decoderTransformer(nn.Module):
-    def __init__(self, args, batch_size, input_size, nhead, latent_size, vocab_size, num_layers, device, topk=1):
+    def __init__(self, args, batch_size, input_size, nhead, latent_size, vocab_size, embed_layer, num_layers, device, topk=1):
         super(decoderTransformer, self).__init__()
         self.args = args
         self.batch_size = batch_size
@@ -170,6 +170,7 @@ class decoderTransformer(nn.Module):
         self.topk = topk
         self.device = device
         self.vocab_size = vocab_size
+        self.embed_layer = embed_layer
 
         self.decoder_layer = nn.TransformerDecoderLayer(d_model=input_size, nhead=nhead, dim_feedforward=input_size*4, batch_first=True, device=device)
         self.transformer_decoder = nn.TransformerDecoder(self.decoder_layer, num_layers=num_layers)
@@ -209,7 +210,7 @@ class decoderTransformer(nn.Module):
         batch_size = z.size(0)
         seq_len = z.size(1)
 
-        hidden = self.activation_function(z)
+        hidden = self.linear_hidden(z)
 
         output = torch.ones(batch_size, seq_len).long().to(self.device)
 
@@ -220,7 +221,7 @@ class decoderTransformer(nn.Module):
             tgt_mask = self.generate_square_subsequent_mask(length=i)
 
             decoder_output = self.transformer_decoder(tgt=tgt_embedding, memory=hidden, tgt_mask=tgt_mask, tgt_key_padding_mask=None, memory_key_padding_mask=mem_pad_mask) 
-            pred_prob = self.activation_function(decoder_output)
+            pred_prob = self.linear_vocab(decoder_output)
     
             pred_prob = pred_prob[:, -1, :] 
             
