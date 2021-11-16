@@ -116,7 +116,7 @@ def plot_grad_flow(named_parameters):
     plt.ylabel("average gradient")
     plt.title("Gradient flow")
     plt.grid(True)
-    
+
 def plot_result_gragh(args, target, prediction):
     
     plt.clf()
@@ -130,4 +130,4 @@ def plot_result_gragh(args, target, prediction):
     data_path = os.path.join(os.getcwd(), "figure_save")
     if not os.path.exists(data_path):
         os.mkdir(data_path)
-    plt.savefig(f"{data_path}/VAE_figure_epoch{int(args.epochs)}_batch{args.batch_size}.png")
+    plt.savefig(f"{data_path}/VAE_figure_epoch{int(args.epoch)}_batch{args.batch_size}.png")

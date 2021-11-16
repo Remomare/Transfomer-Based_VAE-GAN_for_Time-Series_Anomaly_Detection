@@ -22,12 +22,9 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-<<<<<<< HEAD
             timestamp = batch['timestamp'].to(device)
-=======
-            timestamp = batch['time'].to(device)
->>>>>>> parent of de34ae8 (dataset setting update)
             length = batch['length'].to(device)
+
 
             log_prob, mean, log_var, z = model(src_input, tgt_input, length, timestamp)
             NLL_loss, KL_loss, KL_weight = loss_fn(log_prob, tgt_output, length, mean, log_var, kl_anneal_step)
@@ -42,7 +39,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             scheduler.step()
             kl_anneal_step += 1
 
-<<<<<<< HEAD
             if batch_idx < 1:
                 print("timestamp")
                 print(timestamp)
@@ -61,8 +57,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
                 print('z')
                 print(z)
 
-=======
->>>>>>> parent of de34ae8 (dataset setting update)
         # Logging
             if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
                 tqdm.write(f'TRAIN: {batch_idx}/{len(dataloader)} - Loss={loss.item()} \
@@ -81,17 +75,12 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-<<<<<<< HEAD
             timestamp = batch['timestamp'].to(device)
-            length = batch['length'].to(device)
-=======
->>>>>>> parent of de34ae8 (dataset setting update)
-            time = batch['time'].to(device)
             length = batch['length'].to(device)
             """
             need check
             """
-            z, output, tgt_embedding = model(src_input, tgt_input, length, time)
+            z, output, tgt_embedding = model(src_input, tgt_input, length, timestamp)
 
             loss = loss_fn(output, tgt_embedding)
 
@@ -121,7 +110,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
         plt.clf()
         
    
-def test_model(args, model, dataloader, spm_model, writer, device):
+def test_model(args, model, dataloader, writer, device):
 
     model = model.eval()
     total_source_distance = 0
@@ -130,15 +119,10 @@ def test_model(args, model, dataloader, spm_model, writer, device):
 
     for batch_idx, batch in enumerate(tqdm(dataloader, desc='TEST Sequence')):
         src_input = batch['src_input'].to(device)
+        target_input = batch['target_input'].to(device)
         tgt_input = batch['tgt_input'].to(device)
         tgt_output = batch['tgt_output'].to(device)
-<<<<<<< HEAD
         timestamp = batch['timestamp'].to(device)
-        length = batch['length'].to(device)
-        timestamp = batch['timestamp'].to(device)
-=======
-        timestamp = batch['time'].to(device)
->>>>>>> parent of de34ae8 (dataset setting update)
         length = batch['length'].to(device)
         reference = batch['target']
         source_distance = 0
@@ -151,7 +135,6 @@ def test_model(args, model, dataloader, spm_model, writer, device):
                 src_pad_mask = model.encoder.generate_padding_mask(src_input, 0)
 
                 z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask, timestamp)
-<<<<<<< HEAD
                 output, generated = model.decoder.vae_decode(z, src_pad_mask, timestamp)
             if batch_idx < 1:
                 print("timestamp")
@@ -162,31 +145,20 @@ def test_model(args, model, dataloader, spm_model, writer, device):
                 print(output)
                 print("generated")
                 print(generated)
-=======
-                output = model.decoder.vae_decode(z, src_pad_mask, timestamp)
->>>>>>> parent of de34ae8 (dataset setting update)
+
 
         if args.vae_setting ==False:
             with torch.no_grad():
                 src_embedding = model.get_embedding(src_input)
+
                 src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
-                
+        
         for i in range(0, src_input.size(0)):
-            reference_series.append(reference[i])
-            generated_series.append(output[i])
-            source_distance = generated_series - reference_series
 
-        # Logging
-        if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
-            tqdm.write(f'TEST: {batch_idx}/{len(dataloader)} - Absolute_Value={source_distance}')
-        if args.use_tensorboard_logging:
-            writer.add_scalar('TEST/Absolute_Value', source_distance, batch_idx)
+            generated_series.append(generated[i])
 
-    total_source_distance /= len(dataloader)
+        reference_series.append(reference)
 
-    tqdm.write("Completed model test")
-    if args.use_tensorboard_logging:
-        writer.add_text('TEST/Total_BLEU_Score', str(total_source_distance))
     
     plot_result_gragh(args, reference_series, generated_series)
     
@@ -203,5 +175,3 @@ def test_model(args, model, dataloader, spm_model, writer, device):
             for sentence in generated_series:
                 f.write(sentence + '\n')
     tqdm.write(f"Saved generated text to {args.output_path}")
-    
-    
