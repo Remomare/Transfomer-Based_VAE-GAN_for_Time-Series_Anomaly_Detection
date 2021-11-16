@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Transformer(nn.Module):
-    def __init__(self, args, batch_size, vocab_size=8004, embed_size=512, hidden_size=256, nhead=8, latent_size=32, 
+    def __init__(self, args, batch_size, vocab_size=8000, embed_size=512, hidden_size=256, nhead=8, latent_size=32, 
                 embedding_dropout_ratio=0.5, num_layers=6, topk=1, vae_setting=False,
                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
@@ -26,7 +26,7 @@ class Transformer(nn.Module):
         self.embedding_dropout = nn.Dropout(p=self.embedding_dropout_ratio)
 
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
-        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, self.data_embed, num_layers, device)
+        self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, self.data_embed,  num_layers, device)
 
     def forward(self, input_data, target_data, non_pad_length, timestamp):
 
@@ -212,19 +212,26 @@ class decoderTransformer(nn.Module):
 
         hidden = self.linear_hidden(z)
 
-        output = torch.ones(batch_size, seq_len).long().to(self.device)
+        output = torch.ones(batch_size, seq_len).long().to(self.device) * 1
+
+
+        generated_seq = torch.full((batch_size, 1),
+                                   1,
+                                   dtype=torch.long,
+                                   device=self.device)
 
         for i in range(1, seq_len):
             tgt_embedding = self.embed_layer(output[:, :i]) 
             tgt_embedding = self.pos_encoder(tgt_embedding, timestamp) 
 
-            tgt_mask = self.generate_square_subsequent_mask(length=i)
+            tgt_mask = self.generate_square_subsequent_mask(i)
 
             decoder_output = self.transformer_decoder(tgt=tgt_embedding, memory=hidden, tgt_mask=tgt_mask, tgt_key_padding_mask=None, memory_key_padding_mask=mem_pad_mask) 
-            pred_prob = self.linear_vocab(decoder_output)
+            pred_prob_a = self.linear_vocab(decoder_output)
+            pred_prob_b = F.softmax(pred_prob_a, dim=-1)
     
-            pred_prob = pred_prob[:, -1, :] 
-            
+            pred_prob = pred_prob_b[:, -1, :] 
+            #problem
             if self.topk == 1:
                 output_t = pred_prob.data.topk(self.topk).indices.squeeze() 
             else:
@@ -234,8 +241,22 @@ class decoderTransformer(nn.Module):
                 for j in range(batch_size):
                     output_t[j] = topk_indices[j, sampled[j]]
             output[:, i] = output_t
+            
+            last_generated_token_idx = pred_prob.argmax(dim=-1).unsqueeze(1)
+            generated_seq = torch.cat((generated_seq, last_generated_token_idx), dim=-1)
+
+            if i < 2:
+              print('pred_prob')
+              print(pred_prob)
+              print(pred_prob.size())
+              print('output_t')
+              print(output_t)
         
-        return output
+        generared_sequence = []
+        for each_line in output:
+            generared_sequence.append(each_line.tolist())
+
+        return output, generated_seq[:, 1:].contiguous()
 
     def generate_padding_mask(self, data, pad_idx):
 
@@ -243,10 +264,13 @@ class decoderTransformer(nn.Module):
 
             return padding_mask
 
-    def generate_square_subsequent_mask(self, sz):
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)).to(self.device)
-        return mask
+    def generate_square_subsequent_mask(self, length):
+
+        subsequent_mask = (torch.triu(torch.ones(length, length)) == 1).transpose(0, 1).float().to(self.device)
+        subsequent_mask = subsequent_mask.masked_fill(subsequent_mask == 0, float('-inf'))
+        subsequent_mask = subsequent_mask.masked_fill(subsequent_mask == 1, float(0.0))
+
+        return subsequent_mask
 
 
 

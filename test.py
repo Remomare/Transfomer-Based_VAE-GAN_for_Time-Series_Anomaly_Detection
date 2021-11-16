@@ -18,15 +18,15 @@ def main(args):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    csv_path = os.path.join(args.dataset_path + args.dataset)
+    csv_path = os.path.join(args.dataset_path+args.dataset)
     dataset_test = CustomDataset(args, csv_path)
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, 
                                                 drop_last=False, shuffle=False, num_workers=args.num_workers)
 
-    model = Transformer(batch_size=args.batch_size, vocab_size=args.vocab_size+4,
+    model = Transformer(args=args, batch_size=args.batch_size, vocab_size=args.vocab_size,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
-                        embedding_dropout_ratio=args.embedding_dropout_ratio, num_layers=args.num_layers,
-                        topk=args.topk, vae_setting=args.vae_setting,
+                        embedding_dropout_ratio=args.embedding_dropout_ratio,
+                        num_layers=args.num_layers, topk=args.topk, vae_setting=args.vae_setting,
                         device=device).to(device) 
     
     model.load_state_dict(torch.load(args.model_path))
@@ -52,21 +52,22 @@ if __name__ == "__main__":
                         help='Path to save final model')
     parser.add_argument('--debug_path', default='./model_debug', type=str,
                         help='Path to save debug files')
-
+    parser.add_argument('--model_path', default='./model_result/Transformer_time_series.pt', type=str)
     parser.add_argument('--dataset_path', type=str,
                         default='./G3/',
                         help='Path of dataset foler')
     parser.add_argument('--dataset', type=str,
-                        default='preprocessed_data.txt',
+                        default='preprossed_data.txt',
                         help='Specific dataset to use')
     parser.add_argument('--time_column_index', type=int, default=0,
                         help='Column index of label in csv file')
+    parser.add_argument('--target_column_index', type=int, default=3,
+                        help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--target_column_index', default=3, type=int)
     parser.add_argument('--vocab_size', default=48000, type=int,
                         help='Caption vocabulary size; Default is 8000')
-    parser.add_argument('--max_seq_len', default=100, type=int,
+    parser.add_argument('--max_seq_len', default=50, type=int,
                         help='maximum sequence length for each sequence')
     parser.add_argument('--seq_len', default=30, type=int)
     parser.add_argument('--min_seq_len', default=10, type=int,
@@ -82,12 +83,13 @@ if __name__ == "__main__":
                         help='Size of latent vector for model')
     parser.add_argument('--embedding_dropout_ratio', default=0.5, type=float,
                         help='Dropout ratio for embedding layer')
-    parser.add_argument('--num_layers', default=6, type=int)
+    parser.add_argument('--num_layers', default=6, type=int,
+                        help='Number of layers for model, especially transformer layer')
 
 
     parser.add_argument('--vae_setting', default=False, type= bool)
 
-    parser.add_argument('--epoch', default=30, type=int,
+    parser.add_argument('--epoch', default=50, type=int,
                         help='Epoch size for training')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
@@ -105,7 +107,7 @@ if __name__ == "__main__":
                         help='save best valid accuracy only')
     parser.add_argument('--early_stopping_patience', default=None, type=int,
                         help='patience to stop training')
-    parser.add_argument('--log_interval', default=500, type=int,
+    parser.add_argument('--log_interval', default=5, type=int,
                         help='Interval for printing batch loss')
     parser.add_argument('--use_tensorboard_logging', default=True, type=bool,
                         help='use tensorboard for logging')

@@ -26,7 +26,7 @@ def main(args):
     dataloaders = torch.utils.data.DataLoader(datasets, batch_size=args.batch_size, 
                                                         drop_last=True, shuffle=True, num_workers=args.num_workers)
 
-    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size+4,
+    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio,
                         num_layers=args.num_layers, topk=args.topk, vae_setting=args.vae_setting,
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                         default='./G3/',
                         help='Path of dataset foler')
     parser.add_argument('--dataset', type=str,
-                        default='preprocessed_data.txt',
+                        default='preprossed_data.txt',
                         help='Specific dataset to use')
     parser.add_argument('--time_column_index', type=int, default=0,
                         help='Column index of label in csv file')
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=64000, type=int,
+    parser.add_argument('--vocab_size', default=48000, type=int,
                         help='Caption vocabulary size; Default is 8000')
     parser.add_argument('--max_seq_len', default=50, type=int,
                         help='maximum sequence length for each sequence')
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                         help='Size of hidden vector for model')
     parser.add_argument('--latent_size', default=32, type=int,
                         help='Size of latent vector for model')
-    parser.add_argument('--embedding_dropout_ratio', default=0.5, type=float,
+    parser.add_argument('--embedding_dropout_ratio', default=0.2, type=float,
                         help='Dropout ratio for embedding layer')
     parser.add_argument('--num_layers', default=6, type=int,
                         help='Number of layers for model, especially transformer layer')
@@ -109,15 +109,15 @@ if __name__ == "__main__":
 
     parser.add_argument('--vae_setting', default=True, type= bool)
 
-    parser.add_argument('--epoch', default=10, type=int,
+    parser.add_argument('--epoch', default=20, type=int,
                         help='Epoch size for training')
-    parser.add_argument('--batch_size', default=16, type=int,
+    parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_workers', default=2, type=int,
                         help='Number of workers used in dataloading')
     parser.add_argument('--lr', default=0.0010, type=float,
                         help='Learning rate for optimizer')
-    parser.add_argument('--seed', default=42, type=int,
+    parser.add_argument('--seed', default=24, type=int,
                         help='Random seed for system')
     parser.add_argument('--kl_anneal_function', default='logistic', type=str,
                         choices=['logistic', 'linear', 'none'],
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                         help='save best valid accuracy only')
     parser.add_argument('--early_stopping_patience', default=None, type=int,
                         help='patience to stop training')
-    parser.add_argument('--log_interval', default=500, type=int,
+    parser.add_argument('--log_interval', default=5, type=int,
                         help='Interval for printing batch loss')
     parser.add_argument('--use_tensorboard_logging', default=True, type=bool,
                         help='use tensorboard for logging')
