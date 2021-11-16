@@ -76,9 +76,12 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
                 writer.add_scalar('TRAIN/Batch_Accuracy', batch_acc.item(), batch_idx+(epoch_idx*len(dataloader)))
     else:
          for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
-            src_input = batch['src_input'].to(device)
-            tgt_input = batch['tgt_input'].to(device)
-            tgt_output = batch['tgt_output'].to(device)
+            src_input_1 = batch['src_input_1'].to(device)
+            tgt_input_1 = batch['tgt_input_!'].to(device)
+            tgt_output_1 = batch['tgt_output_1'].to(device)
+            src_input_2 = batch['src_input_2'].to(device)
+            tgt_input_2 = batch['tgt_input_2'].to(device)
+            tgt_output_2 = batch['tgt_output_2'].to(device)
 
             timestamp = batch['timestamp'].to(device)
             length = batch['length'].to(device)
@@ -88,7 +91,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             """
             need check
             """
-            z, output, tgt_embedding = model(src_input, tgt_input, length, time)
+            z, output, tgt_embedding = model(src_input_1, tgt_input_1, length, time)
 
             loss = loss_fn(output, tgt_embedding)
 
