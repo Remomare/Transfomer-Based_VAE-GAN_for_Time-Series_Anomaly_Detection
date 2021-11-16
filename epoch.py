@@ -22,7 +22,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-            timestamp = batch['timestamp'].to(device)
+            timestamp = batch['time'].to(device)
             length = batch['length'].to(device)
 
             log_prob, mean, log_var, z = model(src_input, tgt_input, length, timestamp)
@@ -37,24 +37,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             optimizer.step()
             scheduler.step()
             kl_anneal_step += 1
-
-            if batch_idx < 1:
-                print("timestamp")
-                print(timestamp)
-                print("src_input")
-                print(src_input)
-                print("tgt_input")
-                print(tgt_input)
-                print("tgt_output")
-                print(tgt_output)
-                print('log_prob')
-                print(log_prob)
-                print('mean')
-                print(mean)
-                print('log_var')
-                print(log_var)
-                print('z')
-                print(z)
 
         # Logging
             if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
@@ -74,8 +56,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-            timestamp = batch['timestamp'].to(device)
-            length = batch['length'].to(device)
             time = batch['time'].to(device)
             length = batch['length'].to(device)
             """
@@ -111,7 +91,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
         plt.clf()
         
    
-def test_model(args, model, dataloader, writer, device):
+def test_model(args, model, dataloader, spm_model, writer, device):
 
     model = model.eval()
     total_source_distance = 0
@@ -122,9 +102,7 @@ def test_model(args, model, dataloader, writer, device):
         src_input = batch['src_input'].to(device)
         tgt_input = batch['tgt_input'].to(device)
         tgt_output = batch['tgt_output'].to(device)
-        timestamp = batch['timestamp'].to(device)
-        length = batch['length'].to(device)
-        timestamp = batch['timestamp'].to(device)
+        timestamp = batch['time'].to(device)
         length = batch['length'].to(device)
         reference = batch['target']
         source_distance = 0
@@ -137,16 +115,7 @@ def test_model(args, model, dataloader, writer, device):
                 src_pad_mask = model.encoder.generate_padding_mask(src_input, 0)
 
                 z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask, timestamp)
-                output, generated = model.decoder.vae_decode(z, src_pad_mask, timestamp)
-            if batch_idx < 1:
-                print("timestamp")
-                print(timestamp)
-                print('target_input')
-                print(src_input)
-                print("output")
-                print(output)
-                print("generated")
-                print(generated)
+                output = model.decoder.vae_decode(z, src_pad_mask, timestamp)
 
         if args.vae_setting ==False:
             with torch.no_grad():

@@ -26,7 +26,7 @@ def main(args):
     dataloaders = torch.utils.data.DataLoader(datasets, batch_size=args.batch_size, 
                                                         drop_last=True, shuffle=True, num_workers=args.num_workers)
 
-    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size,
+    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size+4,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio,
                         num_layers=args.num_layers, topk=args.topk, vae_setting=args.vae_setting,
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=48000, type=int,
+    parser.add_argument('--vocab_size', default=64000, type=int,
                         help='Caption vocabulary size; Default is 8000')
     parser.add_argument('--max_seq_len', default=50, type=int,
                         help='maximum sequence length for each sequence')
