@@ -77,7 +77,7 @@ class  CustomDataset(torch.utils.data.Dataset):
                     for d, d_name in [(src_input_1, 'src_input_1'), (tgt_input_1, 'tgt_input_1'), (tgt_output_1, 'tgt_output_1'), 
                                       (src_input_2, 'src_input_2'), (tgt_input_2, 'tgt_input_2'), (tgt_output_2, 'tgt_output_2'),
                                       (timestamp, 'timestamp')]:
-                        pad_len = args.max_seq_len - len(d)
+                        pad_len = (args.max_seq_len+1) - len(d)
                         if pad_len > 0:
                             padding  = torch.tensor(0, dtype=torch.long).unsqueeze(0).repeat(pad_len)
                             data[d_name] = torch.cat([d, padding]).long()

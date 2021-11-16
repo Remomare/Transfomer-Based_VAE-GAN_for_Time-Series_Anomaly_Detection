@@ -23,7 +23,7 @@ def main(args):
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, 
                                                 drop_last=False, shuffle=False, num_workers=args.num_workers)
 
-    model = Transformer(batch_size=args.batch_size, vocab_size=args.vocab_size+4,
+    model = Transformer(args=args, batch_size=args.batch_size, vocab_size=args.vocab_size+4,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio, num_layers=args.num_layers,
                         topk=args.topk, vae_setting=args.vae_setting,
@@ -52,6 +52,8 @@ if __name__ == "__main__":
                         help='Path to save final model')
     parser.add_argument('--debug_path', default='./model_debug', type=str,
                         help='Path to save debug files')
+
+    parser.add_argument('--model_path', default='./model_result/Transformer_time_series.pt', type=str)
 
     parser.add_argument('--dataset_path', type=str,
                         default='./G3/',

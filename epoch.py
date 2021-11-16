@@ -20,7 +20,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
     if args.vae_setting == True:
         for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
             src_input_1 = batch['src_input_1'].to(device)
-            tgt_input_1 = batch['tgt_input_!'].to(device)
+            tgt_input_1 = batch['tgt_input_1'].to(device)
             tgt_output_1 = batch['tgt_output_1'].to(device)
             src_input_2 = batch['src_input_2'].to(device)
             tgt_input_2 = batch['tgt_input_2'].to(device)
@@ -77,7 +77,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
     else:
          for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
             src_input_1 = batch['src_input_1'].to(device)
-            tgt_input_1 = batch['tgt_input_!'].to(device)
+            tgt_input_1 = batch['tgt_input_1'].to(device)
             tgt_output_1 = batch['tgt_output_1'].to(device)
             src_input_2 = batch['src_input_2'].to(device)
             tgt_input_2 = batch['tgt_input_2'].to(device)
@@ -130,7 +130,7 @@ def test_model(args, model, dataloader, spm_model, writer, device):
 
     for batch_idx, batch in enumerate(tqdm(dataloader, desc='TEST Sequence')):
         src_input_1 = batch['src_input_1'].to(device)
-        tgt_input_1 = batch['tgt_input_!'].to(device)
+        tgt_input_1 = batch['tgt_input_1'].to(device)
         tgt_output_1 = batch['tgt_output_1'].to(device)
         src_input_2 = batch['src_input_2'].to(device)
         tgt_input_2 = batch['tgt_input_2'].to(device)
