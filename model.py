@@ -214,6 +214,8 @@ class decoderTransformer(nn.Module):
 
         output = torch.ones(batch_size, seq_len).long().to(self.device)
 
+        generated_seq = torch.full((batch_size, 1),  1, dtype=torch.long, device=self.device)
+
         for i in range(1, seq_len):
             tgt_embedding = self.embed_layer(output[:, :i]) 
             tgt_embedding = self.pos_encoder(tgt_embedding, timestamp) 
@@ -234,8 +236,23 @@ class decoderTransformer(nn.Module):
                 for j in range(batch_size):
                     output_t[j] = topk_indices[j, sampled[j]]
             output[:, i] = output_t
+            
+            last_generated_token_idx = pred_prob.argmax(dim=-1).unsqueeze(1)
+            generated_seq = torch.cat((generated_seq, last_generated_token_idx), dim=-1)
+
+            if i < 2:
+              print('pred_prob')
+              print(pred_prob)
+              print(pred_prob.size())
+              print('output_t')
+              print(output_t)
         
-        return output
+        generared_sequence = []
+        for each_line in output:
+            generared_sequence.append(each_line.tolist())
+
+        return output, generated_seq[:, 1:].contiguous()
+
 
     def generate_padding_mask(self, data, pad_idx):
 
