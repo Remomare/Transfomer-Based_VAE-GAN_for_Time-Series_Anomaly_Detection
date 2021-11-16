@@ -23,7 +23,7 @@ def main(args):
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, 
                                                 drop_last=False, shuffle=False, num_workers=args.num_workers)
 
-    model = Transformer(args=args, batch_size=args.batch_size, vocab_size=args.vocab_size,
+    model = Transformer(batch_size=args.batch_size, vocab_size=args.vocab_size+4,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio, num_layers=args.num_layers,
                         topk=args.topk, vae_setting=args.vae_setting,
@@ -53,9 +53,6 @@ if __name__ == "__main__":
     parser.add_argument('--debug_path', default='./model_debug', type=str,
                         help='Path to save debug files')
 
-    parser.add_argument('--model_path', default='./model_result/Transformer_time_series.pt', type=str)
-
-
     parser.add_argument('--dataset_path', type=str,
                         default='./G3/',
                         help='Path of dataset foler')
@@ -72,7 +69,6 @@ if __name__ == "__main__":
     parser.add_argument('--max_seq_len', default=100, type=int,
                         help='maximum sequence length for each sequence')
     parser.add_argument('--seq_len', default=30, type=int)
-    
     parser.add_argument('--min_seq_len', default=10, type=int,
                         help='minumum sequence length for each sequence')
     parser.add_argument('--topk', default=1, type=int,
@@ -87,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument('--embedding_dropout_ratio', default=0.5, type=float,
                         help='Dropout ratio for embedding layer')
     parser.add_argument('--num_layers', default=6, type=int)
+
 
     parser.add_argument('--vae_setting', default=False, type= bool)
 

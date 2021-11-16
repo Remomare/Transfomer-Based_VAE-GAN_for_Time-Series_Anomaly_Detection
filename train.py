@@ -26,7 +26,7 @@ def main(args):
     dataloaders = torch.utils.data.DataLoader(datasets, batch_size=args.batch_size, 
                                                         drop_last=True, shuffle=True, num_workers=args.num_workers)
 
-    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size,
+    model = Transformer(args, batch_size=args.batch_size, vocab_size=args.vocab_size+4,
                         embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio,
                         num_layers=args.num_layers, topk=args.topk, vae_setting=args.vae_setting,
