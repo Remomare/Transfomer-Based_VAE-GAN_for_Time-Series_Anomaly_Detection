@@ -40,7 +40,7 @@ class  CustomDataset(torch.utils.data.Dataset):
         
         tensor_ingredient_1 = torch.tensor([])
         tensor_ingredient_2 = torch.tensor([])
-        tensor_timestamp = torch.tensro([])
+        tensor_timestamp = torch.tensor([])
 
         for idx in tqdm(df.index, desc=f'Loading {self.data_path}'):
             data = {}
@@ -90,7 +90,7 @@ class  CustomDataset(torch.utils.data.Dataset):
                     self.datas.append(data)
                     tensor_ingredient_1 = torch.tensor([])
                     tensor_ingredient_2 = torch.tensor([])
-                    tensor_timestamp = torch.tensro([])
+                    tensor_timestamp = torch.tensor([])
 
                 else:
                     src_input_1 = tensor_ingredient_1
@@ -98,7 +98,7 @@ class  CustomDataset(torch.utils.data.Dataset):
                     timestamp = tensor_timestamp
 
                     for d, d_name in [(src_input_1, 'src_input_1'), (src_input_2, 'src_input_2'), (timestamp, 'timestamp')]:
-                        pad_len = args.max_seq_len - len(d)
+                        pad_len = (args.max_seq_len+1) - len(d)
                         if pad_len > 0:
                             padding  = torch.tensor(0, dtype=torch.long).unsqueeze(0).repeat(pad_len)
                             data[d_name] = torch.cat([d, padding]).long()
@@ -111,7 +111,7 @@ class  CustomDataset(torch.utils.data.Dataset):
                     self.datas.append(data)
                     tensor_ingredient_1 = torch.tensor([])
                     tensor_ingredient_2 = torch.tensor([])
-                    tensor_timestamp = torch.tensro([])
+                    tensor_timestamp = torch.tensor([])
 
 
     def __len__(self):

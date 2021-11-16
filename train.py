@@ -61,7 +61,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--model_name', default='Transformer_time_series', type=str, 
+    parser.add_argument('--model_name', default='Transformer_time_series.pt', type=str, 
                         help='Model name') 
     parser.add_argument('--load_from_checkpoint', default=None, type=str,
                         help='Path of existing model')
