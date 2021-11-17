@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--epoch', default=10, type=int,
                         help='Epoch size for training')
-    parser.add_argument('--batch_size', default=16, type=int,
+    parser.add_argument('--batch_size', default=2, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_workers', default=2, type=int,
                         help='Number of workers used in dataloading')

@@ -121,7 +121,7 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
         plt.clf()
         
    
-def test_model(args, model, dataloader, spm_model, writer, device):
+def test_model(args, model, dataloader, writer, device):
 
     model = model.eval()
     total_source_distance = 0

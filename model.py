@@ -220,7 +220,7 @@ class decoderTransformer(nn.Module):
             tgt_embedding = self.embed_layer(output[:, :i]) 
             tgt_embedding = self.pos_encoder(tgt_embedding, timestamp) 
 
-            tgt_mask = self.generate_square_subsequent_mask(length=i)
+            tgt_mask = self.generate_square_subsequent_mask(sz=i)
 
             decoder_output = self.transformer_decoder(tgt=tgt_embedding, memory=hidden, tgt_mask=tgt_mask, tgt_key_padding_mask=None, memory_key_padding_mask=mem_pad_mask) 
             pred_prob = self.linear_vocab(decoder_output)
