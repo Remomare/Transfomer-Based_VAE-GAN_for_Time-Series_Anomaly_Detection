@@ -27,7 +27,7 @@ class Transformer(nn.Module):
         self.encoder = encoderTransformer(args, batch_size, embed_size, nhead, latent_size, num_layers, device)
         self.decoder = decoderTransformer(args, batch_size, embed_size, nhead, latent_size, vocab_size, self.data_embed, num_layers, device)
 
-    def forward(self, input_data, target_data, non_pad_length, timestamp):
+    def forward(self, input_data, target_data, timestamp):
 
         input_embedding = self.data_embed(input_data) * math.sqrt(self.embed_size)
         target_embedding = self.data_embed(target_data) * math.sqrt(self.embed_size)
@@ -74,7 +74,6 @@ class encoderTransformer(nn.Module):
 
     def forward(self, input_embedding, timestamp=None, has_mask = True):
 
-        
         if self.args.vae_setting == True: #transformer-based-vae
             if has_mask:
                 if self.src_mask is None or self.src_mask.size(0) != len(input_embedding):
@@ -182,7 +181,7 @@ class decoderTransformer(nn.Module):
             logits = self.linear_vocab(output) 
             log_prob = F.log_softmax(logits, dim=-1) 
             
-            return output, log_prob
+            return log_prob
 
     def vae_decode(self, z, mem_pad_mask, timestamp):
          

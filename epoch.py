@@ -19,20 +19,17 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
     epoch_acc = 0
     if args.vae_setting == True:
         for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
-            src_input_1 = batch['src_input_1'].to(device)
-            tgt_input_1 = batch['tgt_input_1'].to(device)
-            tgt_output_1 = batch['tgt_output_1'].to(device)
-            src_input_2 = batch['src_input_2'].to(device)
-            tgt_input_2 = batch['tgt_input_2'].to(device)
-            tgt_output_2 = batch['tgt_output_2'].to(device)
+            src_input = batch['src_input'].to(device)
+            tgt_input = batch['tgt_input'].to(device)
+            tgt_output = batch['tgt_output'].to(device)
             timestamp = batch['timestamp'].to(device)
             length = batch['length'].to(device)
 
-            log_prob, mean, log_var, z = model(src_input_1, tgt_input_1, length, timestamp)
-            NLL_loss, KL_loss, KL_weight = loss_fn(log_prob, tgt_output_1, length, mean, log_var, kl_anneal_step)
+            log_prob, mean, log_var, z = model(src_input, tgt_input, length, timestamp)
+            NLL_loss, KL_loss, KL_weight = loss_fn(log_prob, tgt_output, length, mean, log_var, kl_anneal_step)
             loss = (NLL_loss + KL_weight * KL_loss) / args.batch_size
 
-            batch_acc = vae_batch_accuracy(log_prob, tgt_output_1, length)
+            batch_acc = vae_batch_accuracy(log_prob, tgt_output, length)
             epoch_acc += batch_acc.detach()
 
             optimizer.zero_grad()
@@ -46,11 +43,11 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
                 print("timestamp")
                 print(timestamp)
                 print("src_input")
-                print(src_input_1)
+                print(src_input)
                 print("tgt_input")
-                print(tgt_input_1)
+                print(tgt_input)
                 print("tgt_output")
-                print(tgt_output_1)
+                print(tgt_output)
                 print('log_prob')
                 print(log_prob)
                 print('mean')
@@ -76,24 +73,16 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
                 writer.add_scalar('TRAIN/Batch_Accuracy', batch_acc.item(), batch_idx+(epoch_idx*len(dataloader)))
     else:
          for batch_idx, batch in enumerate(tqdm(dataloader, desc=f'TRAIN EPOCH {epoch_idx}/{args.epoch}')):
-            src_input_1 = batch['src_input_1'].to(device)
-            tgt_input_1 = batch['tgt_input_1'].to(device)
-            tgt_output_1 = batch['tgt_output_1'].to(device)
-            src_input_2 = batch['src_input_2'].to(device)
-            tgt_input_2 = batch['tgt_input_2'].to(device)
-            tgt_output_2 = batch['tgt_output_2'].to(device)
+            src_input = batch['src_input'].to(device)
+            tgt_input = batch['tgt_input'].to(device)
+            tgt_output = batch['tgt_output'].to(device)
 
             timestamp = batch['timestamp'].to(device)
             length = batch['length'].to(device)
 
-            time = batch['time'].to(device)
-            length = batch['length'].to(device)
-            """
-            need check
-            """
-            z, output, tgt_embedding = model(src_input_1, tgt_input_1, length, time)
+            output = model(src_input, tgt_input, timestamp)
 
-            loss = loss_fn(output, tgt_embedding)
+            loss = loss_fn(output, tgt_output)
 
             optimizer.zero_grad()
             loss.backward()
@@ -129,12 +118,9 @@ def test_model(args, model, dataloader, writer, device):
     generated_series = []
 
     for batch_idx, batch in enumerate(tqdm(dataloader, desc='TEST Sequence')):
-        src_input_1 = batch['src_input_1'].to(device)
-        tgt_input_1 = batch['tgt_input_1'].to(device)
-        tgt_output_1 = batch['tgt_output_1'].to(device)
-        src_input_2 = batch['src_input_2'].to(device)
-        tgt_input_2 = batch['tgt_input_2'].to(device)
-        tgt_output_2 = batch['tgt_output_2'].to(device)
+        src_input = batch['src_input_1'].to(device)
+        tgt_input = batch['tgt_input_1'].to(device)
+        tgt_output = batch['tgt_output_1'].to(device)
         timestamp = batch['timestamp'].to(device)
         length = batch['length'].to(device)
         reference = batch['target']
@@ -142,10 +128,10 @@ def test_model(args, model, dataloader, writer, device):
 
         if args.vae_setting == True:
             with torch.no_grad():
-                src_embedding = model.get_embedding(src_input_1)
+                src_embedding = model.get_embedding(src_input)
 
-                src_mask = model.encoder.generate_square_subsequent_mask(src_input_1.size(1))
-                src_pad_mask = model.encoder.generate_padding_mask(src_input_1, 0)
+                src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
+                src_pad_mask = model.encoder.generate_padding_mask(src_input, 0)
 
                 z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask, timestamp)
                 output, generated = model.decoder.vae_decode(z, src_pad_mask, timestamp)
@@ -154,7 +140,7 @@ def test_model(args, model, dataloader, writer, device):
                 print("timestamp")
                 print(timestamp)
                 print('target_input')
-                print(src_input_1)
+                print(src_input)
                 print("output")
                 print(output)
                 print("generated")
@@ -163,11 +149,9 @@ def test_model(args, model, dataloader, writer, device):
 
         if args.vae_setting ==False:
             with torch.no_grad():
-                src_embedding = model.get_embedding(src_input_1)
-
-                src_mask = model.encoder.generate_square_subsequent_mask(src_input_1.size(1))
-        
-        for i in range(0, src_input_1.size(0)):
+                output = model(src_input, tgt_input, timestamp)
+                
+        for i in range(0, src_input.size(0)):
 
             generated_series.append(generated[i])
 
