@@ -38,26 +38,6 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             scheduler.step()
             kl_anneal_step += 1
 
-
-            if batch_idx < 1:
-                print("timestamp")
-                print(timestamp)
-                print("src_input")
-                print(src_input)
-                print("tgt_input")
-                print(tgt_input)
-                print("tgt_output")
-                print(tgt_output)
-                print('log_prob')
-                print(log_prob)
-                print('mean')
-                print(mean)
-                print('log_var')
-                print(log_var)
-                print('z')
-                print(z)
-
-
         # Logging
             if batch_idx % args.log_interval == 0 or batch_idx == len(dataloader) - 1:
                 tqdm.write(f'TRAIN: {batch_idx}/{len(dataloader)} - Loss={loss.item()} \
@@ -76,11 +56,11 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             src_input = batch['src_input'].to(device)
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
-
             timestamp = batch['timestamp'].to(device)
+            timestamp_input = batch['timestamp_input'].to(device)
             length = batch['length'].to(device)
 
-            output = model(src_input, tgt_input, timestamp)
+            output = model(src_input, tgt_input, timestamp_input)
 
             loss = loss_fn(output, tgt_output)
 
@@ -122,6 +102,7 @@ def test_model(args, model, dataloader, writer, device):
         tgt_input = batch['tgt_input_1'].to(device)
         tgt_output = batch['tgt_output_1'].to(device)
         timestamp = batch['timestamp'].to(device)
+        timestamp_input = batch['timestamp_input'].to(device)
         length = batch['length'].to(device)
         reference = batch['target']
         source_distance = 0
@@ -129,27 +110,15 @@ def test_model(args, model, dataloader, writer, device):
         if args.vae_setting == True:
             with torch.no_grad():
                 src_embedding = model.get_embedding(src_input)
+                src_pad_mask = model.decoder.generate_padding_mask(src_input, 0)
 
-                src_mask = model.encoder.generate_square_subsequent_mask(src_input.size(1))
-                src_pad_mask = model.encoder.generate_padding_mask(src_input, 0)
-
-                z, mean, log_var = model.encoder(src_embedding, src_mask, src_pad_mask, timestamp)
+                z, mean, log_var = model.encoder(src_embedding, timestamp)
                 output, generated = model.decoder.vae_decode(z, src_pad_mask, timestamp)
-            
-            if batch_idx < 1:
-                print("timestamp")
-                print(timestamp)
-                print('target_input')
-                print(src_input)
-                print("output")
-                print(output)
-                print("generated")
-                print(generated)
 
 
-        if args.vae_setting ==False:
+        if args.vae_setting == False:
             with torch.no_grad():
-                output = model(src_input, tgt_input, timestamp)
+                output = model(src_input, tgt_input, timestamp_input)
                 
         for i in range(0, src_input.size(0)):
 

@@ -23,8 +23,8 @@ def main(args):
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, 
                                                 drop_last=False, shuffle=False, num_workers=args.num_workers)
 
-    model = Transformer(args=args, batch_size=args.batch_size, vocab_size=args.vocab_size+4,
-                        embed_size=args.embed_size, hidden_size=args.hidden_size, latent_size=args.latent_size,
+    model = Transformer(args=args, batch_size=args.batch_size, vocab_size=args.vocab_size,
+                        embed_size=args.embed_size, hidden_size=args.hidden_size, nhead=args.nhead, latent_size=args.latent_size,
                         embedding_dropout_ratio=args.embedding_dropout_ratio, num_layers=args.num_layers,
                         topk=args.topk, vae_setting=args.vae_setting,
                         device=device).to(device) 
@@ -80,6 +80,8 @@ if __name__ == "__main__":
                         help='Size of embedding vector for model')
     parser.add_argument('--hidden_size', default=256, type=int,
                         help='Size of hidden vector for model')
+    parser.add_argument('--nhead', default=2, type=int,
+                        help='Size of latent vector for model')
     parser.add_argument('--latent_size', default=32, type=int,
                         help='Size of latent vector for model')
     parser.add_argument('--embedding_dropout_ratio', default=0.5, type=float,

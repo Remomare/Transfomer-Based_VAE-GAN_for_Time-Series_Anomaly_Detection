@@ -1,7 +1,9 @@
 import math
 import torch
+from torch._C import device
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.types import Device
 
 class Transformer(nn.Module):
     def __init__(self, args, batch_size, vocab_size, embed_size, hidden_size, nhead, latent_size, 
@@ -43,12 +45,9 @@ class Transformer(nn.Module):
             
             return output 
 
-
-
     def get_embedding(self, input_data):
-        return self.data_embed(input_data)
-
-
+        embedded = self.data_embed(input_data) * math.sqrt(self.embed_size)
+        return embedded
 
 class encoderTransformer(nn.Module):
     def __init__(self, args, batch_size, input_size, nhead, latent_size, num_layers, device):
@@ -75,6 +74,7 @@ class encoderTransformer(nn.Module):
     def forward(self, input_embedding, timestamp=None, has_mask = True):
 
         if self.args.vae_setting == True: #transformer-based-vae
+            
             if has_mask:
                 if self.src_mask is None or self.src_mask.size(0) != len(input_embedding):
                     mask = self.generate_square_subsequent_mask(len(input_embedding)).to(self.device)
@@ -88,6 +88,7 @@ class encoderTransformer(nn.Module):
             return z, log_var, mean
         
         else: #transformer
+            
             if has_mask:
                 if self.src_mask is None or self.src_mask.size(0) != len(input_embedding):
                     mask = self.generate_square_subsequent_mask(len(input_embedding)).to(self.device)
@@ -101,8 +102,8 @@ class encoderTransformer(nn.Module):
             return z
 
     def generate_padding_mask(self, data, pad_idx):
-            padding_mask = (data == pad_idx)
-            return padding_mask
+        padding_mask = (data == pad_idx)
+        return padding_mask
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
@@ -198,9 +199,9 @@ class decoderTransformer(nn.Module):
             tgt_embedding = self.embed_layer(output[:, :i]) 
             tgt_embedding = self.pos_encoder(tgt_embedding, timestamp) 
 
-            tgt_mask = self.generate_square_subsequent_mask(sz=i)
+            tgt_mask = self.generate_square_subsequent_mask(i).to(self.device)
 
-            decoder_output = self.transformer_decoder(tgt=tgt_embedding, memory=hidden, tgt_mask=tgt_mask, tgt_key_padding_mask=None, memory_key_padding_mask=mem_pad_mask) 
+            decoder_output = self.transformer_decoder(tgt=tgt_embedding, memory=hidden, tgt_mask=tgt_mask, memory_key_padding_mask=mem_pad_mask) 
             pred_prob = self.linear_vocab(decoder_output)
     
             pred_prob = pred_prob[:, -1, :] 
