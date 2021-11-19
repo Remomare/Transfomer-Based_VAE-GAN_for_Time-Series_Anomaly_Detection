@@ -9,3 +9,6 @@ runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.o
 runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636476081.LAPTOP-BFO77RI1.13476.0
 runs/ModelName=Transformer_time_series - BS=16_EP=10_LR=0.0010_SEED=42_/events.out.tfevents.1636476344.LAPTOP-BFO77RI1.9664.0
 *.0
+*.txt
+*.m
+*.asv
