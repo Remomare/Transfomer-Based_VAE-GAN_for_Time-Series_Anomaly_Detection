@@ -35,9 +35,12 @@ class Transformer(nn.Module):
         target_embedding = self.data_embed(target_data) * math.sqrt(self.embed_size)
 
         if self.vae_setting == True:
-            """
+            
+            z, log_var, mean = self.encoder(input_embedding, timestamp)
+            log_prob = self.decoder(z, target_embedding, input_embedding, timestamp)
+
             return log_prob, mean, log_var, z
-            """
+            
         else:
             
             z = self.encoder(input_embedding, timestamp)
@@ -97,7 +100,7 @@ class encoderTransformer(nn.Module):
                 self.src_mask = None
             src_pad_mask = self.generate_padding_mask(input_embedding,0)
             
-            z = self.encoder(input_embedding, self.src_mask, timestamp)
+            z = self.encoder(input_embedding, self.src_mask, src_pad_mask, timestamp)
 
             return z
 
@@ -110,15 +113,23 @@ class encoderTransformer(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
             
-    def encoder(self, input_embedding, src_mask, timestamp):
+    def encoder(self, input_embedding, src_mask, src_pad_mask, timestamp):
         input_embedding = self.pos_encoder(input_embedding, timestamp)
-        encoder_output = self.transformer_encoder(input_embedding, src_mask)
+        encoder_output = self.transformer_encoder(input_embedding, src_mask, src_pad_mask)
         return encoder_output
-    """
-    def vae_encode(self, input_embedding, src_mask, timestamp):
+    
+    def vae_encode(self, input_embedding, src_mask, src_pad_mask, timestamp):
+        batch_size = input_embedding.size(0)
+
+        input_embedding = self.pos_encoder(input_embedding, timestamp) 
+
+        hidden = self.transformer_encoder(input_embedding, src_mask)
+        
+        mean = self.activation_function(hidden)
+        log_var = self.activation_function(hidden) 
 
         return mean, log_var
-    """
+    
     def reparameterize(self, mean, log_var):
         batch_size = mean.size(0)
         seq_len = mean.size(1)

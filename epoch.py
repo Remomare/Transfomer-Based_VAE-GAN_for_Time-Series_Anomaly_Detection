@@ -23,14 +23,19 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             tgt_input = batch['tgt_input'].to(device)
             tgt_output = batch['tgt_output'].to(device)
             timestamp = batch['timestamp'].to(device)
+            timestamp_input = batch['timestamp_input'].to(device)
             length = batch['length'].to(device)
 
-            log_prob, mean, log_var, z = model(src_input, tgt_input, length, timestamp)
+            log_prob, mean, log_var, z = model(src_input, tgt_input, timestamp_input)
             NLL_loss, KL_loss, KL_weight = loss_fn(log_prob, tgt_output, length, mean, log_var, kl_anneal_step)
             loss = (NLL_loss + KL_weight * KL_loss) / args.batch_size
 
             batch_acc = vae_batch_accuracy(log_prob, tgt_output, length)
             epoch_acc += batch_acc.detach()
+
+            if batch_idx < 1:
+              print("output")
+              print(log_prob)            
 
             optimizer.zero_grad()
             loss.backward()
@@ -63,6 +68,10 @@ def train_epoch(args, epoch_idx, model, dataloader, optimizer, scheduler, loss_f
             output = model(src_input, tgt_input, timestamp_input)
 
             loss = loss_fn(output, tgt_output)
+
+            if batch_idx < 1:
+              print("output")
+              print(output)
 
             optimizer.zero_grad()
             loss.backward()

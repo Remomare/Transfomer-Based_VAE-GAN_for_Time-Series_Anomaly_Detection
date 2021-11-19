@@ -85,7 +85,7 @@ if __name__ == "__main__":
                         help='Column index of label in csv file')
     parser.add_argument('--data_column_index', type=int, default=1,
                         help='Column index of text in csv file. Must be given if dataset_path is .csv format')
-    parser.add_argument('--vocab_size', default=48000, type=int,
+    parser.add_argument('--vocab_size', default=52000, type=int,
                         help='Caption vocabulary size; Default is 8000')
     parser.add_argument('--max_seq_len', default=30, type=int,
                         help='maximum sequence length for each sequence')
@@ -110,11 +110,11 @@ if __name__ == "__main__":
                         help='Number of layers for model, especially transformer layer')
 
 
-    parser.add_argument('--vae_setting', default=True, type= bool)
+    parser.add_argument('--vae_setting', default=False, type= bool)
 
-    parser.add_argument('--epoch', default=10, type=int,
+    parser.add_argument('--epoch', default=20, type=int,
                         help='Epoch size for training')
-    parser.add_argument('--batch_size', default=2, type=int,
+    parser.add_argument('--batch_size', default=32, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_workers', default=2, type=int,
                         help='Number of workers used in dataloading')
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                         help='save best valid accuracy only')
     parser.add_argument('--early_stopping_patience', default=None, type=int,
                         help='patience to stop training')
-    parser.add_argument('--log_interval', default=500, type=int,
+    parser.add_argument('--log_interval', default=5, type=int,
                         help='Interval for printing batch loss')
     parser.add_argument('--use_tensorboard_logging', default=True, type=bool,
                         help='use tensorboard for logging')
