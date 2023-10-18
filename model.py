@@ -140,7 +140,6 @@ class encoderTransformer(nn.Module):
         return z
 
 
-
 class decoderTransformer(nn.Module):
     def __init__(self, args, batch_size, input_size, nhead, latent_size, vocab_size, embed_layer, num_layers, device, topk=1):
         super(decoderTransformer, self).__init__()

@@ -29,7 +29,7 @@ def data_preprocessing(args):
             datas_max = df[data_column].max()
             for i in tqdm(range(0, df.shape[0]), desc='{} data preprocessing...'.format(origin_data)):
                 df.loc[i,data_column] = round((df[data_column].values[i] - datas_min) * 1000) +5 # for eos sos token
-            print(datas_max)
+            print((datas_max-datas_min)*1000)
             
     df.to_csv(os.path.join(args.dataset_path, 'preprocessed_data.txt'), sep='\t',columns=["Timestamp","Str1","Str2","Str3"], header=True, index=False)
 
